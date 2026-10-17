@@ -31,6 +31,12 @@ authentication and per-user row-level security are added.
 training's `id`, `lectureText`, and `audioUrl`. Visit `/history` to see saved
 sessions and `/training/[id]` to revisit one.
 
+On the home page, upload a PDF or DOCX resume (up to 4 MB) to extract and
+preview its text in the editable resume field. Scanned/image-only PDFs are not
+OCR processed and need a text-based PDF or DOCX. The upload parsing endpoint
+does not save the file; submitting a training still saves the resume text as
+described above.
+
 ## Environment variables
 
 | Variable | Purpose |
