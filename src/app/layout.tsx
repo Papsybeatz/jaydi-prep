@@ -1,6 +1,7 @@
 import "./globals.css";
+import type { Metadata } from "next";
 
-export const metadata: any = {
+export const metadata: Metadata = {
   title: "Jaydi - Interview Prep",
   description: "Interview preparation buddy",
 };

@@ -1,150 +1,129 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
-}
-
 .main {
   display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+  width: 100%;
+  max-width: 920px;
+  gap: 40px;
+  margin: 0 auto;
+  padding: 72px 28px;
 }
 
-.intro {
+.header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 24px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
+.eyebrow {
+  margin-bottom: 14px;
+  color: #5a6d5a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
+.header h1 {
+  font-size: clamp(36px, 6vw, 54px);
+  letter-spacing: -0.045em;
 }
 
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
+.intro {
+  max-width: 540px;
+  margin-top: 14px;
+  color: #586158;
+  font-size: 17px;
+  line-height: 1.6;
 }
 
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
+.historyLink {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border: 1px solid #d7ddd5;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
 }
 
-.ctas a {
+.historyLink:hover {
+  background: #f0f3ef;
+}
+
+.form {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
+  flex-direction: column;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid #e0e5de;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.field textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 14px;
+  border: 1px solid #d7ddd5;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d241e;
+  font: inherit;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.field textarea:focus {
+  border-color: #526b52;
+  outline: 2px solid #526b5233;
+}
+
+.submit {
+  align-self: flex-start;
+  min-height: 46px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #294c35;
+  color: #fff;
   cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
+  font: inherit;
+  font-weight: 650;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
+.submit:hover:not(:disabled) {
+  background: #1f3b29;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.error {
+  color: #a12626;
+  font-size: 14px;
 }
 
 @media (max-width: 600px) {
   .main {
-    padding: 48px 24px;
+    gap: 28px;
+    padding: 42px 18px;
   }
 
-  .intro {
-    gap: 16px;
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
+  .form {
+    padding: 20px;
   }
-}
-
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
-  }
-}
-
-.code {
-  font-family: var(--font-geist-mono);
-  font-size: 0.9em;
-  background: color-mix(in srgb, currentColor 8%, transparent);
-  padding: 0.1em 0.4em;
-  border-radius: 6px;
 }
