@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jaydi
 
-## Getting Started
+Jaydi turns a resume and a job description into interview preparation, with
+generated lecture text and optional audio.
 
-First, run the development server:
+## Getting started
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local`.
+3. Set the Supabase project URL and anon key in `.env.local`.
+4. Run the SQL migration in `supabase/migrations/20261017000000_create_trainings.sql`
+   using the Supabase SQL Editor.
+5. Start the app with `npm run dev`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The Supabase URL and anon key are available in the project API settings. The
+anon key is intended for public clients; do not put a Supabase service-role key
+in this app's environment.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Slice 2 data access
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The migration creates `public.trainings` and grants the anonymous Supabase role
+permission to insert and read training rows so the API and history pages work
+without accounts.
 
-## Learn More
+**This no-auth setup is shared and public:** anyone who can reach the app can
+create trainings and read every saved resume, job description, lecture, and
+audio URL. Do not use real personal data in a public deployment until
+authentication and per-user row-level security are added.
 
-To learn more about Next.js, take a look at the following resources:
+`POST /api/train` accepts `resume` and `jobDescription` and returns the saved
+training's `id`, `lectureText`, and `audioUrl`. Visit `/history` to see saved
+sessions and `/training/[id]` to revisit one.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
+| `OPENAI_API_KEY` | Optional key for lecture generation |
+| `TTS_API_KEY` | Optional key for audio generation |
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Without Supabase configuration, pages show a setup message and training
+generation returns a configuration error rather than claiming an unsaved
+training succeeded. Lecture and audio generation retain their existing
+fallback behavior when their respective API keys are absent.
