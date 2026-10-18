@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import AccountControls from "@/app/auth/account-controls";
 import styles from "./page.module.css";
 
 type TrainResponse = {
@@ -206,6 +207,8 @@ export default function Home() {
           </div>
         </div>
 
+        <AccountControls />
+
         <div className={styles.sidebarSpacer} />
         <section className={styles.coachCard}>
           <div className={styles.coachAvatar}><Icon name="spark" size={19} /></div>
@@ -366,7 +369,14 @@ export default function Home() {
                 />
               </section>
 
-              {error && <p className={styles.error} role="alert">{error}</p>}
+              {error && (
+                <p className={styles.error} role="alert">
+                  {error}{" "}
+                  {error.toLowerCase().includes("sign in") && (
+                    <Link href="/auth?next=%2F">Sign in to continue.</Link>
+                  )}
+                </p>
+              )}
               <div className={styles.submitRow}>
                 <p><Icon name="lock" size={15} /> Your details shape your training.</p>
                 <button className={styles.submit} disabled={isSubmitting || isParsing} type="submit">

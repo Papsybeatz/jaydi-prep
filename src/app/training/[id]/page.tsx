@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTraining } from "@/lib/db/trainings";
-import { SupabaseConfigurationError } from "@/lib/db/supabase";
+import { SupabaseConfigurationError } from "@/lib/supabase/config";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,27 @@ export default async function TrainingPage({
     notFound();
   }
 
+  let user;
+  try {
+    user = await getAuthenticatedUser();
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      return (
+        <main>
+          <h1>Training</h1>
+          <p role="alert">{error.message}</p>
+        </main>
+      );
+    }
+    throw error;
+  }
+  if (!user) {
+    redirect(`/auth?next=${encodeURIComponent(`/training/${id}`)}`);
+  }
+
   let training;
   try {
-    training = await getTraining(id);
+    training = await getTraining(id, user.id);
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) {
       return (

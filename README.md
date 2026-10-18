@@ -8,9 +8,11 @@ generated lecture text and optional audio.
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local`.
 3. Set the Supabase project URL and anon key in `.env.local`.
-4. Run the SQL migration in `supabase/migrations/20261017000000_create_trainings.sql`
+4. Run both SQL migrations, in timestamp order, from `supabase/migrations/`
    using the Supabase SQL Editor.
-5. Start the app with `npm run dev`.
+5. In Supabase Auth settings, enable email sign-in and add the local and
+   production `/auth/callback` URLs to the allowed redirect URLs.
+6. Start the app with `npm run dev`.
 
 The Supabase URL and anon key are available in the project API settings. The
 anon key is intended for public clients; do not put a Supabase service-role key
@@ -18,18 +20,19 @@ in this app's environment.
 
 ## Slice 2 data access
 
-The migration creates `public.trainings` and grants the anonymous Supabase role
-permission to insert and read training rows so the API and history pages work
-without accounts.
+The initial migration creates `public.trainings`. The follow-up migration adds
+`user_id`, revokes anonymous table access, and grants authenticated users
+row-level access only to their own trainings. The app validates sessions on the
+server for both training APIs, the history page, and training detail pages.
 
-**This no-auth setup is shared and public:** anyone who can reach the app can
-create trainings and read every saved resume, job description, lecture, and
-audio URL. Do not use real personal data in a public deployment until
-authentication and per-user row-level security are added.
+Existing trainings created before authentication have no owner. They remain in
+the database but are inaccessible through the app and RLS; the migration does
+not assign them to a user or delete them.
 
+Users must sign in before uploading a resume or creating a training.
 `POST /api/train` accepts `resume` and `jobDescription` and returns the saved
-training's `id`, `lectureText`, and `audioUrl`. Visit `/history` to see saved
-sessions and `/training/[id]` to revisit one.
+training's `id`, `lectureText`, and `audioUrl`. Visit `/history` to see only
+your sessions and `/training/[id]` to revisit one.
 
 On the home page, upload a PDF or DOCX resume (up to 4 MB) to extract and
 preview its text in the editable resume field. Scanned/image-only PDFs are not
@@ -46,7 +49,7 @@ described above.
 | `OPENAI_API_KEY` | Optional key for lecture generation |
 | `TTS_API_KEY` | Optional key for audio generation |
 
-Without Supabase configuration, pages show a setup message and training
-generation returns a configuration error rather than claiming an unsaved
-training succeeded. Lecture and audio generation retain their existing
-fallback behavior when their respective API keys are absent.
+Without Supabase configuration, sign-in shows a setup error, protected data
+pages show a configuration message, and API requests return a configuration
+error. Lecture and audio generation retain their existing fallback behavior
+when their respective API keys are absent.

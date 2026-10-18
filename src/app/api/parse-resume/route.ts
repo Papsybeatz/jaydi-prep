@@ -1,6 +1,8 @@
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import "pdfjs-dist/legacy/build/pdf.worker.mjs";
+import { SupabaseConfigurationError } from "@/lib/supabase/config";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -14,6 +16,19 @@ function jsonResponse(body: ParseResponse, status = 200): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return jsonResponse({ error: "Sign in to upload a resume." }, 401);
+    }
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      return jsonResponse({ error: error.message }, 503);
+    }
+    console.error("Could not validate session for resume upload.", error);
+    return jsonResponse({ error: "Could not verify your session." }, 500);
+  }
+
   if (!request.headers.get("content-type")?.includes("multipart/form-data")) {
     return jsonResponse({ error: "Upload a PDF or DOCX resume file." }, 415);
   }

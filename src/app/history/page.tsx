@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { listTrainings } from "@/lib/db/trainings";
-import { SupabaseConfigurationError } from "@/lib/db/supabase";
+import { SupabaseConfigurationError } from "@/lib/supabase/config";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +25,27 @@ function getJobTitle(jobDescription: string): string {
 }
 
 export default async function HistoryPage() {
+  let user;
+  try {
+    user = await getAuthenticatedUser();
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      return (
+        <main>
+          <h1>Training history</h1>
+          <p role="alert">{error.message}</p>
+        </main>
+      );
+    }
+    throw error;
+  }
+  if (!user) {
+    redirect("/auth?next=%2Fhistory");
+  }
+
   let trainings;
   try {
-    trainings = await listTrainings();
+    trainings = await listTrainings(user.id);
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) {
       return (

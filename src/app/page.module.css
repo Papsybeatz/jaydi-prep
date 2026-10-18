@@ -186,6 +186,59 @@
   text-align: center;
 }
 
+.accountSection {
+  margin-top: 24px;
+  padding: 0 10px;
+}
+
+.accountSection .sideSectionTitle {
+  margin: 0 0 10px;
+}
+
+.accountStatus,
+.accountEmail {
+  overflow: hidden;
+  color: #847879;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountButton {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 7px;
+  padding: 0 11px;
+  border: 1px solid #ebe4e5;
+  border-radius: 8px;
+  background: #fff;
+  color: #7d1f2e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.accountButton:hover {
+  border-color: #ddc7ca;
+  background: #f8f3f4;
+}
+
+.accountError {
+  margin-top: 7px;
+  color: #a32030;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.error a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .mainColumn {
   min-width: 0;
   flex: 1;

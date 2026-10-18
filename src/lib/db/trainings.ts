@@ -1,7 +1,8 @@
-import { getSupabaseClient } from "@/lib/db/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type Training = {
   id: string;
+  user_id: string | null;
   resume: string;
   jobDescription: string;
   lectureText: string;
@@ -9,12 +10,16 @@ export type Training = {
   createdAt: string;
 };
 
-export type NewTraining = Omit<Training, "id" | "createdAt">;
+export type NewTraining = Omit<Training, "id" | "createdAt" | "user_id">;
 
-export async function saveTraining(training: NewTraining): Promise<Training> {
-  const { data, error } = await getSupabaseClient()
+export async function saveTraining(
+  training: NewTraining,
+  userId: string,
+): Promise<Training> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
     .from("trainings")
-    .insert(training)
+    .insert({ ...training, user_id: userId })
     .select("*")
     .single();
 
@@ -28,10 +33,12 @@ export async function saveTraining(training: NewTraining): Promise<Training> {
   return data;
 }
 
-export async function listTrainings(): Promise<Training[]> {
-  const { data, error } = await getSupabaseClient()
+export async function listTrainings(userId: string): Promise<Training[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
     .from("trainings")
     .select("*")
+    .eq("user_id", userId)
     .order("createdAt", { ascending: false });
 
   if (error) {
@@ -44,11 +51,16 @@ export async function listTrainings(): Promise<Training[]> {
   return data;
 }
 
-export async function getTraining(id: string): Promise<Training | null> {
-  const { data, error } = await getSupabaseClient()
+export async function getTraining(
+  id: string,
+  userId: string,
+): Promise<Training | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
     .from("trainings")
     .select("*")
     .eq("id", id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (error) {

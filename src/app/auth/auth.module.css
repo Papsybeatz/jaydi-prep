@@ -1,0 +1,158 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px 18px;
+  background:
+    radial-gradient(ellipse at 70% 8%, #f5ebec 0, transparent 38%),
+    #fbfbf9;
+  color: #332022;
+}
+
+.card {
+  width: min(100%, 460px);
+  padding: clamp(28px, 6vw, 48px);
+  border: 1px solid #ebe5e6;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 80px #33202212;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: -1.2px;
+}
+
+.brand > span:last-child {
+  margin-left: -9px;
+  color: #b88955;
+}
+
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #f0e8e9;
+  color: #9a2638;
+  font-size: 18px;
+}
+
+.eyebrow {
+  margin-top: 38px;
+  color: #9a2638;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+
+.card h1 {
+  margin-top: 9px;
+  font-size: clamp(27px, 5vw, 34px);
+  letter-spacing: -1.3px;
+}
+
+.description {
+  margin-top: 10px;
+  color: #847879;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.form label {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid #e5ddde;
+  border-radius: 9px;
+  background: #fff;
+  color: #332022;
+  font: inherit;
+}
+
+.form input:focus {
+  border-color: #9a2638;
+  outline: 3px solid #9a26381a;
+}
+
+.form button {
+  min-height: 48px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 9px;
+  background: #9a2638;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.form button:hover:not(:disabled) {
+  background: #7d1f2e;
+}
+
+.form button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.error,
+.status {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.error {
+  background: #fff0f0;
+  color: #a32030;
+}
+
+.status {
+  background: #f2f6f1;
+  color: #365238;
+}
+
+.switchMode {
+  margin-top: 23px;
+  color: #847879;
+  font-size: 13px;
+  text-align: center;
+}
+
+.switchMode button {
+  border: 0;
+  background: transparent;
+  color: #9a2638;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.backLink {
+  display: block;
+  margin-top: 22px;
+  color: #847879;
+  font-size: 12px;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
