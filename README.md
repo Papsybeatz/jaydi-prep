@@ -69,8 +69,27 @@ described above.
 | `TTS_VOICE` | Optional speech voice override (default `alloy`) |
 
 Lecture text needs **one** of `GROQ_API_KEY` or `OPENAI_API_KEY`; when both
-are present OpenAI is preferred because it also unlocks speech. Groq is
-fast and cheap but has **no speech endpoint**, so it cannot produce audio.
+are present OpenAI is preferred because the same key can also produce audio.
+
+### Why audio uses OpenAI rather than Groq
+
+Groq does host text-to-speech (Canopy Labs Orpheus), so it is not true that
+Groq cannot speak. It is nevertheless a poor fit for narrating a lecture:
+
+| | Groq Orpheus | OpenAI `tts-1` |
+| --- | --- | --- |
+| Max input per request | **200 characters** | 4,096 characters |
+| Requests for a ~15,000-char lecture | ~75 | ~4 |
+| Output format | WAV only | MP3 |
+| Price | $22 / 1M chars | $15 / 1M chars |
+
+Seventy-five sequential calls also collide with Groq's free-tier 30 requests
+per minute and with serverless function timeouts, so a lecture would fail
+partway through. Use an OpenAI key for stored narration. Groq remains the
+recommended choice for the lecture text itself.
+
+When no speech key is configured, the training page reads the lecture aloud
+with the device's own voice, so listening works at zero cost.
 
 Without Supabase configuration, sign-in shows a setup error, protected data
 pages show a configuration message, and API requests return a configuration
