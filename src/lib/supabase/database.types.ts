@@ -4,7 +4,7 @@ export type TrainingRow = {
   resume: string;
   jobDescription: string;
   lectureText: string;
-  audioUrl: string;
+  audioPath: string;
   createdAt: string;
 };
 

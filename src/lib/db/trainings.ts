@@ -6,11 +6,16 @@ export type Training = {
   resume: string;
   jobDescription: string;
   lectureText: string;
-  audioUrl: string;
+  audioPath: string;
   createdAt: string;
 };
 
-export type NewTraining = Omit<Training, "id" | "createdAt" | "user_id">;
+export type NewTraining = {
+  resume: string;
+  jobDescription: string;
+  lectureText: string;
+  audioPath: string;
+};
 
 export async function saveTraining(
   training: NewTraining,
@@ -31,6 +36,23 @@ export async function saveTraining(
   }
 
   return data;
+}
+
+export async function setTrainingAudioPath(
+  id: string,
+  userId: string,
+  audioPath: string,
+): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("trainings")
+    .update({ audioPath })
+    .eq("id", id)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function listTrainings(userId: string): Promise<Training[]> {

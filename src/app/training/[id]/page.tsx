@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTraining } from "@/lib/db/trainings";
+import { createTrainingAudioUrl } from "@/lib/storage/trainingAudio";
 import { SupabaseConfigurationError } from "@/lib/supabase/config";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 
@@ -53,6 +54,10 @@ export default async function TrainingPage({
     notFound();
   }
 
+  const audioUrl = training.audioPath
+    ? await createTrainingAudioUrl(training.audioPath)
+    : null;
+
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px" }}>
       <p><Link href="/history">← Training history</Link></p>
@@ -61,21 +66,36 @@ export default async function TrainingPage({
         Created {new Date(training.createdAt).toLocaleString()}
       </p>
 
-      {training.audioUrl && (
+      {audioUrl ? (
         <section aria-label="Audio training" style={{ marginBottom: 32 }}>
-          <audio controls preload="metadata" src={training.audioUrl}>
+          <audio controls preload="metadata" src={audioUrl}>
             Your browser does not support audio playback.
           </audio>
           <p style={{ marginTop: 10 }}>
             <a
               download="jaydi-training.mp3"
-              href={training.audioUrl}
+              href={audioUrl}
               style={{ textDecoration: "underline" }}
             >
               Download audio
             </a>
           </p>
         </section>
+      ) : (
+        <p
+          role="status"
+          style={{
+            background: "#fbf6ec",
+            border: "1px solid #ecdfc4",
+            borderRadius: 10,
+            color: "#6b5a33",
+            marginBottom: 32,
+            padding: "12px 16px",
+          }}
+        >
+          Audio isn’t available for this training yet — the written lecture is
+          below.
+        </p>
       )}
 
       <article style={{ lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
