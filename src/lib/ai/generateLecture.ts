@@ -1,5 +1,5 @@
 export class LectureConfigurationError extends Error {
-  constructor(message = "Lecture generation is not configured. Set GROQ_API_KEY or OPENAI_API_KEY in your environment.") {
+  constructor(message = "Lecture generation is not configured. Set LLM_BASE_URL + LLM_MODEL (any OpenAI-compatible provider), or GROQ_API_KEY, or OPENAI_API_KEY.") {
     super(message);
     this.name = "LectureConfigurationError";
   }
@@ -19,23 +19,52 @@ const SYSTEM_PROMPT =
   "You are a role embodiment coach. Generate a structured lecture with sections: Understanding the role, Resume vs role, Skill gaps, How to think like this role, How to speak like this role, Interview strategy, Embodiment exercises. Return plain text.";
 
 type ChatProvider = {
-  name: "groq" | "openai";
+  name: string;
   apiKey: string;
   endpoint: string;
   defaultModel: string;
 };
 
+const env = (name: string): string => (process.env[name] || "").trim();
+
+const trimBase = (base: string): string => base.replace(/\/+$/, "");
+
 /**
- * Both providers speak the OpenAI chat-completions dialect, so one code path
- * serves them. Selection order:
- *   1. LLM_PROVIDER, when explicitly set to "groq" or "openai"
- *   2. OPENAI_API_KEY, because it also unlocks speech generation
- *   3. GROQ_API_KEY
+ * Jaydi talks to any provider that speaks the OpenAI chat-completions dialect,
+ * so the same code runs against OpenRouter, Together, Fireworks, DeepInfra,
+ * Cerebras, Hugging Face, a local Ollama/vLLM server, or OpenAI itself.
+ *
+ * Selection order:
+ *   1. LLM_BASE_URL        — explicit endpoint, works with any compatible host
+ *   2. LLM_PROVIDER        — "groq" or "openai" preset
+ *   3. OPENAI_API_KEY
+ *   4. GROQ_API_KEY
+ *
+ * Use a dedicated key for this app. Never share one key across products: a
+ * shared key shares its quota, its bill, and its blast radius.
  */
 function resolveChatProvider(): ChatProvider {
-  const forced = (process.env.LLM_PROVIDER || "").trim().toLowerCase();
-  const openAiKey = (process.env.OPENAI_API_KEY || "").trim();
-  const groqKey = (process.env.GROQ_API_KEY || "").trim();
+  const baseUrl = env("LLM_BASE_URL");
+  const model = env("LLM_MODEL");
+  const genericKey = env("LLM_API_KEY");
+
+  if (baseUrl) {
+    if (!model) {
+      throw new LectureConfigurationError(
+        "LLM_BASE_URL is set but LLM_MODEL is missing. Name the model your provider should run, e.g. LLM_MODEL=meta-llama/llama-3.3-70b-instruct.",
+      );
+    }
+    return {
+      name: "custom endpoint",
+      apiKey: genericKey, // optional: local servers such as Ollama need none
+      endpoint: `${trimBase(baseUrl)}/chat/completions`,
+      defaultModel: model,
+    };
+  }
+
+  const forced = env("LLM_PROVIDER").toLowerCase();
+  const openAiKey = env("OPENAI_API_KEY");
+  const groqKey = env("GROQ_API_KEY");
 
   const openai: ChatProvider = {
     name: "openai",
@@ -78,8 +107,12 @@ function resolveChatProvider(): ChatProvider {
 
 export async function generateLecture(resume: string, jd: string): Promise<string> {
   const provider = resolveChatProvider();
-  const model =
-    (process.env.LLM_MODEL || "").trim() || provider.defaultModel;
+  const model = env("LLM_MODEL") || provider.defaultModel;
+
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (provider.apiKey) {
+    headers.Authorization = `Bearer ${provider.apiKey}`;
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
@@ -87,10 +120,7 @@ export async function generateLecture(resume: string, jd: string): Promise<strin
   try {
     const response = await fetch(provider.endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${provider.apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model,
         messages: [
@@ -105,14 +135,23 @@ export async function generateLecture(resume: string, jd: string): Promise<strin
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
-      // Groq returns 429 when the free-tier tokens-per-minute budget is spent.
       if (response.status === 429) {
         throw new LectureGenerationError(
-          "The lecture service is busy or out of quota right now. Please try again in a minute.",
+          "The lecture provider is busy or out of quota right now. Please try again in a minute.",
+        );
+      }
+      if (response.status === 401 || response.status === 403) {
+        throw new LectureGenerationError(
+          `The lecture provider rejected the API key (${response.status}). Check LLM_API_KEY.`,
+        );
+      }
+      if (response.status === 404) {
+        throw new LectureGenerationError(
+          `The lecture provider could not find the model "${model}" (404). Check LLM_MODEL.`,
         );
       }
       throw new LectureGenerationError(
-        `The lecture service (${provider.name}) returned ${response.status}. ${detail.slice(0, 200)}`.trim(),
+        `The lecture provider (${provider.name}) returned ${response.status}. ${detail.slice(0, 200)}`.trim(),
       );
     }
 
@@ -121,7 +160,7 @@ export async function generateLecture(resume: string, jd: string): Promise<strin
 
     if (!lecture) {
       throw new LectureGenerationError(
-        "The lecture service returned an empty response. Please try again.",
+        "The lecture provider returned an empty response. Please try again.",
       );
     }
 
@@ -131,10 +170,10 @@ export async function generateLecture(resume: string, jd: string): Promise<strin
       throw error;
     }
     if (error instanceof Error && error.name === "AbortError") {
-      throw new LectureGenerationError("The lecture service timed out. Please try again.");
+      throw new LectureGenerationError("The lecture provider timed out. Please try again.");
     }
     throw new LectureGenerationError(
-      error instanceof Error ? error.message : "The lecture service request failed.",
+      error instanceof Error ? error.message : "The lecture provider request failed.",
     );
   } finally {
     clearTimeout(timeout);

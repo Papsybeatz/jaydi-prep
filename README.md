@@ -60,41 +60,74 @@ described above.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
-| `GROQ_API_KEY` | Lecture generation via Groq (free tier: 8K TPM / 200K TPD) |
-| `OPENAI_API_KEY` | Lecture generation via OpenAI, and the default speech key |
-| `LLM_PROVIDER` | Optional: `groq` or `openai`. Auto-detected when unset |
-| `LLM_MODEL` | Optional chat model override (defaults per provider) |
-| `TTS_API_KEY` | Required for stored audio narration |
+| `LLM_BASE_URL` | Any OpenAI-compatible base URL, ending at `/v1` |
+| `LLM_API_KEY` | Key for that endpoint (omit for a local server) |
+| `LLM_MODEL` | Model name your provider should run |
+| `LLM_PROVIDER` | Optional preset: `groq` or `openai` |
+| `GROQ_API_KEY` | Preset key for Groq |
+| `OPENAI_API_KEY` | Preset key for OpenAI |
+| `TTS_BASE_URL` | Speech endpoint base (default `https://api.openai.com/v1`) |
+| `TTS_API_KEY` | Speech key (omit for a local server) |
 | `TTS_MODEL` | Optional speech model override (default `tts-1`) |
 | `TTS_VOICE` | Optional speech voice override (default `alloy`) |
+| `TTS_FORMAT` | Must be `mp3` (default); other formats are refused |
+## Choosing an AI provider
 
-Lecture text needs **one** of `GROQ_API_KEY` or `OPENAI_API_KEY`; when both
-are present OpenAI is preferred because the same key can also produce audio.
+Jaydi is not tied to one vendor. Lecture text goes to any provider that speaks
+the OpenAI chat-completions dialect, which covers most open-source model hosts
+as well as the vendors themselves. Set one of these setups:
 
-### Why audio uses OpenAI rather than Groq
+**A. Any OpenAI-compatible endpoint (recommended)**
 
-Groq does host text-to-speech (Canopy Labs Orpheus), so it is not true that
-Groq cannot speak. It is nevertheless a poor fit for narrating a lecture:
+```
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=...
+LLM_MODEL=meta-llama/llama-3.3-70b-instruct
+```
 
-| | Groq Orpheus | OpenAI `tts-1` |
-| --- | --- | --- |
-| Max input per request | **200 characters** | 4,096 characters |
-| Requests for a ~15,000-char lecture | ~75 | ~4 |
-| Output format | WAV only | MP3 |
-| Price | $22 / 1M chars | $15 / 1M chars |
+`LLM_BASE_URL` should stop at the version segment (`/v1`); the app appends
+`/chat/completions`. A local server such as Ollama or vLLM needs no
+`LLM_API_KEY`. Hosts that work this way include OpenRouter, Together AI,
+Fireworks, DeepInfra, Cerebras, Hugging Face, Ollama, vLLM and LocalAI.
 
-Seventy-five sequential calls also collide with Groq's free-tier 30 requests
-per minute and with serverless function timeouts, so a lecture would fail
-partway through. Use an OpenAI key for stored narration. Groq remains the
-recommended choice for the lecture text itself.
+**B. A named preset**
 
-When no speech key is configured, the training page reads the lecture aloud
-with the device's own voice, so listening works at zero cost.
+```
+LLM_PROVIDER=groq      # or openai
+GROQ_API_KEY=...       # or OPENAI_API_KEY
+```
+
+Selection order is `LLM_BASE_URL` → `LLM_PROVIDER` → `OPENAI_API_KEY` →
+`GROQ_API_KEY`. `LLM_MODEL` overrides the provider default.
+
+### Use a dedicated key for this app
+
+Do **not** reuse a key that already runs another product. A shared key shares
+its rate limit, its daily quota, its bill, and its blast radius if it leaks —
+a spike in one app will starve the other, and revoking it to fix that breaks
+both. Issue a separate key for Jaydi, even to the same provider.
+
+Smaller open models are cheap but write noticeably thinner lectures, so pick a
+model with real instruction-following strength for this task.
+
+### Audio narration
+
+`TTS_BASE_URL` defaults to `https://api.openai.com/v1`; point it at any
+OpenAI-compatible speech server (Kokoro-FastAPI, openedai-speech, LocalAI,
+Speaches) to self-host. Joining chunks into one file only works for MP3, so
+`TTS_FORMAT` must be `mp3`; the app refuses other formats rather than writing
+corrupt audio.
+
+Groq also hosts text-to-speech (Canopy Labs Orpheus), but it caps input at
+**200 characters** — roughly 75 requests for one lecture — returns WAV only,
+and costs $22/1M characters. It is not a good fit for long-form narration.
+
+When no speech provider is configured, the training page reads the lecture
+aloud with the device's own voice, so listening works at zero cost.
 
 Without Supabase configuration, sign-in shows a setup error, protected data
 pages show a configuration message, and API requests return a configuration
-error. When no lecture key is present, training creation returns a clear
-configuration error instead of saving placeholder text. When `TTS_API_KEY` is
-missing or speech fails, the training is saved with its lecture, and the
-training page offers to read the lecture aloud using the device's own voice
-so listening still works at zero cost.
+error. When no lecture provider is configured, training creation returns a
+clear configuration error instead of saving placeholder text. When speech
+fails, the training is saved with its lecture and the page offers device
+narration instead.
