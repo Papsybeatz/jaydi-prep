@@ -54,6 +54,48 @@ OCR processed and need a text-based PDF or DOCX. The upload parsing endpoint
 does not save the file; submitting a training still saves the resume text as
 described above.
 
+## Payments: the search-cycle pass
+
+The written lecture is **free**. Narration is the paid part: a pass is a
+one-time purchase that adds a fixed number of audio narrations to the account
+(`PASS_CREDITS`, default 3). Credits never expire, because a job search pauses
+and resumes. Nothing renews, so there is no subscription to cancel.
+
+Flow:
+
+1. `/pricing` shows the free tier and the pass, and starts checkout.
+2. `POST /api/checkout` creates a Stripe Checkout Session in `payment` mode,
+   with `client_reference_id` and `metadata.user_id` set to the account id.
+3. Stripe redirects back to `/pricing/success` or `/pricing/cancelled`.
+4. `POST /api/stripe/webhook` verifies the `stripe-signature` header against
+   the raw body, then inserts a `purchases` row. It runs with the service-role
+   key because there is no user session. The unique
+   `stripe_checkout_session_id` makes replays idempotent.
+5. `POST /api/train` saves the lecture first, then spends one credit through
+   the `consume_audio_credit()` RPC and generates the narration. If narration
+   fails the credit is refunded through `refund_audio_credit()`, so a provider
+   outage never costs a pass.
+
+The gate is on **audio generation**, not on creating a training. An account
+without credits still gets its written lecture; it simply gets no stored audio.
+
+### Required configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `STRIPE_SECRET_KEY` | Creates Checkout Sessions. Use `sk_test_...` until launch |
+| `STRIPE_WEBHOOK_SECRET` | Verifies webhook signatures |
+| `SUPABASE_SERVICE_ROLE_KEY` | Lets the webhook record a purchase; server-only |
+| `NEXT_PUBLIC_SITE_URL` | Absolute origin for the checkout return URLs |
+| `PASS_PRICE_CENTS` | Optional, default `2900` |
+| `PASS_CREDITS` | Optional, default `3` |
+| `PASS_CURRENCY` | Optional, default `usd` |
+
+Set the webhook endpoint in the Stripe dashboard to
+`https://<your-domain>/api/stripe/webhook` and subscribe to
+`checkout.session.completed`. Locally, forward events with
+`stripe listen --forward-to localhost:3000/api/stripe/webhook`.
+
 ## Environment variables
 
 | Variable | Purpose |

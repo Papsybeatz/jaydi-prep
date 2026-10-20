@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import ListenInBrowser from "@/app/training/[id]/listen-in-browser";
+import AudioLocked from "@/app/training/[id]/audio-locked";
 import { getTraining } from "@/lib/db/trainings";
+import { getAudioCredits } from "@/lib/db/purchases";
 import { createTrainingAudioUrl } from "@/lib/storage/trainingAudio";
 import { SupabaseConfigurationError } from "@/lib/supabase/config";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
@@ -59,6 +60,15 @@ export default async function TrainingPage({
     ? await createTrainingAudioUrl(training.audioPath)
     : null;
 
+  let credits = 0;
+  if (!audioUrl) {
+    try {
+      credits = await getAudioCredits();
+    } catch (error) {
+      console.error("Could not read audio credits for the training page.", error);
+    }
+  }
+
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px" }}>
       <p><Link href="/history">← Training history</Link></p>
@@ -83,23 +93,10 @@ export default async function TrainingPage({
           </p>
         </section>
       ) : (
-        <>
-          <p
-            role="status"
-            style={{
-              background: "#fbf6ec",
-              border: "1px solid #ecdfc4",
-              borderRadius: 10,
-              color: "#6b5a33",
-              marginBottom: 16,
-              padding: "12px 16px",
-            }}
-          >
-            Audio narration isn’t stored for this training yet — the written
-            lecture is below.
-          </p>
-          <ListenInBrowser text={training.lectureText} />
-        </>
+        <AudioLocked
+          lectureText={training.lectureText}
+          hasCredits={credits > 0}
+        />
       )}
 
       <article style={{ lineHeight: 1.7, whiteSpace: "pre-wrap" }}>

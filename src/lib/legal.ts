@@ -31,5 +31,9 @@ export const LEGAL = {
       name: "OpenAI",
       role: "generating your lecture text and narrated audio",
     },
+    {
+      name: "Stripe",
+      role: "processing payments for a pass, and storing card details on our behalf",
+    },
   ],
 } as const;

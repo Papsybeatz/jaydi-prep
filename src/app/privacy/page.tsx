@@ -68,6 +68,15 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
+        <h3>Purchase information</h3>
+        <ul>
+          <li>
+            When you buy a pass we store the Stripe session identifier, the
+            amount paid, and how many narrations you have left. We never receive
+            or store your card number.
+          </li>
+        </ul>
+
         <h3>Technical information</h3>
         <ul>
           <li>
@@ -91,6 +100,7 @@ export default function PrivacyPage() {
           <li>To save your trainings so you can revisit them.</li>
           <li>To sign you in and keep your account secure.</li>
           <li>To detect abuse, prevent unauthorized access, and manage cost.</li>
+          <li>To process a pass purchase and track the narrations on it.</li>
           <li>To respond to you when you contact us.</li>
         </ul>
         <p>
@@ -127,6 +137,11 @@ export default function PrivacyPage() {
           your resume and the job description is sent to OpenAI for processing.
           If you are not comfortable with that, please do not submit those
           documents.
+        </div>
+        <div className={styles.note}>
+          <b>Payments.</b> If you buy a pass, Stripe processes the payment. We
+          receive confirmation that it succeeded and the amount, but we never
+          receive or store your card number.
         </div>
       </section>
 

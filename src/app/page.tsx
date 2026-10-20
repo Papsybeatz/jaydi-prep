@@ -408,6 +408,7 @@ export default function Home() {
             </div>
             <nav className={styles.footerLinks} aria-label="Footer">
               <a href="#about">About Jaydi</a>
+              <Link href="/pricing">Pricing</Link>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>
               <a href="#contact">Contact</a>

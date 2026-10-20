@@ -70,7 +70,15 @@ function getServerSpeechSupport() {
   return false;
 }
 
-export default function ListenInBrowser({ text }: { text: string }) {
+export default function ListenInBrowser({
+  text,
+  label = "Listen to this lecture",
+  note = "Plays through your device's voice — nothing is uploaded or downloaded.",
+}: {
+  text: string;
+  label?: string;
+  note?: string;
+}) {
   const chunks = useMemo(() => splitForSpeech(text), [text]);
   const supported = useSyncExternalStore(
     subscribeToSpeechSupport,
@@ -156,12 +164,10 @@ export default function ListenInBrowser({ text }: { text: string }) {
           padding: "10px 18px",
         }}
       >
-        {playing ? "Stop" : "Listen to this lecture"}
+        {playing ? "Stop" : label}
       </button>
       <p style={{ color: "#586158", fontSize: 14, margin: "10px 0 0" }}>
-        Plays through your device&apos;s voice — nothing is uploaded or
-        downloaded. Narration can also be generated as an audio file when the
-        audio service is configured.
+        {note}
       </p>
     </section>
   );

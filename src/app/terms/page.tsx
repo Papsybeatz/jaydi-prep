@@ -112,11 +112,26 @@ export default function TermsPage() {
       </section>
 
       <section className={styles.section}>
-        <h2>6. Fees</h2>
+        <h2>6. Fees, passes, and refunds</h2>
         <p>
-          {LEGAL.product} is currently free to use. If we introduce paid plans,
-          we will present the price and terms before you are charged, and these
-          terms will be updated accordingly.
+          The written lecture is free. Audio narration requires a paid pass.
+        </p>
+        <p>
+          A pass is a <b>one-time purchase</b> that adds a fixed number of audio
+          narrations to your account. The price and the number of narrations are
+          shown at checkout before you pay. Passes do not renew automatically,
+          nothing is charged later, and there is no subscription to cancel.
+        </p>
+        <p>
+          Pass credits do not expire. If narration fails after a credit is used,
+          the credit is returned to your account automatically.
+        </p>
+        <p>
+          Payments are processed by Stripe. We do not receive or store your card
+          details. If you have not used any credits from a pass, contact us
+          within 30 days of purchase to request a refund. Once a narration has
+          been generated, that credit is treated as used. Nothing in this
+          section limits a refund right you have under the law where you live.
         </p>
       </section>
 
