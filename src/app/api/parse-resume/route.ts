@@ -6,6 +6,11 @@ import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+// Lecture generation plus several speech chunks can run well past the default
+// function timeout. Hobby caps at 60s; raise this on a Pro plan if you narrate
+// very long lectures.
+export const maxDuration = 60;
+
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
 const MAX_RESUME_CHARS = 20_000;
 

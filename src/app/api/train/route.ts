@@ -11,6 +11,10 @@ import {
 import { SupabaseConfigurationError } from "@/lib/supabase/config";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 
+// A lecture plus multiple speech chunks can exceed the default function
+// timeout. Hobby caps at 60s; raise this on a Pro plan for long narration.
+export const maxDuration = 60;
+
 type TrainResponse =
   | {
       id: string;
