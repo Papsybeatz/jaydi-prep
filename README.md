@@ -84,13 +84,18 @@ Flow:
    the raw body, then inserts a `purchases` row. It runs with the service-role
    key because there is no user session. The unique
    `stripe_checkout_session_id` makes replays idempotent.
-5. `POST /api/train` saves the lecture first, then spends one credit through
-   the `consume_audio_credit()` RPC and generates the narration. If narration
-   fails the credit is refunded through `refund_audio_credit()`, so a provider
-   outage never costs a pass.
+5. Creating a training **never spends a credit**. Narration is a separate,
+   deliberate request: `POST /api/train/[id]/narration` spends one credit
+   through the `consume_audio_credit()` RPC and generates the audio. If it
+   fails, `refund_audio_credit()` returns the credit, so a provider outage
+   never costs a pass. Re-requesting an already-narrated training returns a
+   fresh link instead of charging again.
 
-The gate is on **audio generation**, not on creating a training. An account
-without credits still gets its written lecture; it simply gets no stored audio.
+The gate is on **audio narration**, not on creating a training. An account
+without credits still gets its written lecture; it simply gets no audio. And
+because the credit is spent on the training page rather than at creation time,
+"N narrations" means N roles of your choice — not the next N you happen to
+create.
 
 ### Required configuration
 

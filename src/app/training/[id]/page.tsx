@@ -94,8 +94,9 @@ export default async function TrainingPage({
         </section>
       ) : (
         <AudioLocked
+          trainingId={training.id}
           lectureText={training.lectureText}
-          hasCredits={credits > 0}
+          credits={credits}
         />
       )}
 
