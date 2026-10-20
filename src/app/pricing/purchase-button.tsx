@@ -4,9 +4,11 @@ import { useState } from "react";
 
 export default function PurchaseButton({
   label,
+  passId,
   variant = "primary",
 }: {
   label: string;
+  passId: string;
   variant?: "primary" | "quiet";
 }) {
   const [loading, setLoading] = useState(false);
@@ -16,7 +18,11 @@ export default function PurchaseButton({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/checkout", { method: "POST" });
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passId }),
+      });
       const data = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !data.url) {
         throw new Error(data.error || "Could not start checkout.");
@@ -50,6 +56,7 @@ export default function PurchaseButton({
           fontWeight: 600,
           opacity: loading ? 0.7 : 1,
           padding: "11px 18px",
+          width: primary ? "100%" : undefined,
         }}
       >
         {loading ? "Opening checkout…" : label}

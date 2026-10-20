@@ -56,10 +56,23 @@ described above.
 
 ## Payments: the search-cycle pass
 
-The written lecture is **free**. Narration is the paid part: a pass is a
-one-time purchase that adds a fixed number of audio narrations to the account
-(`PASS_CREDITS`, default 3). Credits never expire, because a job search pauses
-and resumes. Nothing renews, so there is no subscription to cancel.
+The written lecture is **free**, because a job description can be pasted into a
+chat window for nothing. Narration is the paid part: a pass is a one-time
+purchase that adds a fixed number of audio narrations to the account. Credits
+never expire, because a job search pauses and resumes. Nothing renews, so there
+is no subscription to cancel.
+
+Three tiers live in `src/lib/billing/config.ts` and nowhere else:
+
+| Tier | Credits | Price | Per narration | Role |
+| --- | --- | --- | --- | --- |
+| One interview | 1 | $14 | $14.00 | entry / anchor |
+| **Full search** | **3** | **$29** | **$9.67** | **target (highlighted)** |
+| Extended search | 6 | $49 | $8.17 | ceiling |
+
+The geometry follows the compromise and decoy effects: the entry tier sits near
+half the target and the ceiling near 1.7x, so the middle tier is the obvious
+value by price per narration and is the one the layout promotes.
 
 Flow:
 
@@ -87,9 +100,10 @@ without credits still gets its written lecture; it simply gets no stored audio.
 | `STRIPE_WEBHOOK_SECRET` | Verifies webhook signatures |
 | `SUPABASE_SERVICE_ROLE_KEY` | Lets the webhook record a purchase; server-only |
 | `NEXT_PUBLIC_SITE_URL` | Absolute origin for the checkout return URLs |
-| `PASS_PRICE_CENTS` | Optional, default `2900` |
-| `PASS_CREDITS` | Optional, default `3` |
 | `PASS_CURRENCY` | Optional, default `usd` |
+
+Prices and credit counts are not environment variables; edit `PASS_TIERS` in
+`src/lib/billing/config.ts`.
 
 Set the webhook endpoint in the Stripe dashboard to
 `https://<your-domain>/api/stripe/webhook` and subscribe to

@@ -4,6 +4,7 @@ import Link from "next/link";
 import ListenInBrowser from "@/app/training/[id]/listen-in-browser";
 import PurchaseButton from "@/app/pricing/purchase-button";
 import {
+  DEFAULT_TIER,
   FREE_AUDIO_PREVIEW_CHARS,
   formatPrice,
   narrationLabel,
@@ -86,14 +87,15 @@ export default function AudioLocked({
 
       <div style={{ marginTop: 18 }}>
         <PurchaseButton
-          label={`Unlock ${narrationLabel()} — ${formatPrice()}`}
+          passId={DEFAULT_TIER.id}
+          label={`Unlock ${narrationLabel(DEFAULT_TIER.credits)} — ${formatPrice(DEFAULT_TIER.priceCents)}`}
         />
       </div>
 
       <p style={{ color: "#586158", fontSize: 14, margin: "12px 0 0" }}>
         One-time purchase. Credits never expire.{" "}
         <Link href="/pricing" style={{ textDecoration: "underline" }}>
-          What&apos;s included
+          Other options
         </Link>
       </p>
     </section>

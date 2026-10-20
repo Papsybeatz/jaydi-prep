@@ -1,4 +1,9 @@
-import { PASS } from "@/lib/billing/config";
+import {
+  DEFAULT_TIER,
+  PASS_CURRENCY,
+  findTier,
+  narrationLabel,
+} from "@/lib/billing/config";
 import { getStripe, StripeConfigurationError } from "@/lib/billing/stripe";
 import { SupabaseConfigurationError } from "@/lib/supabase/config";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
@@ -32,6 +37,17 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  let passId: unknown;
+  try {
+    const body = await request.json();
+    passId = body?.passId;
+  } catch {
+    // No body is fine: fall back to the recommended tier.
+  }
+
+  const tier =
+    (typeof passId === "string" ? findTier(passId) : null) ?? DEFAULT_TIER;
+
   try {
     const stripe = getStripe();
     const origin = siteOrigin(request);
@@ -42,17 +58,18 @@ export async function POST(request: Request): Promise<Response> {
       customer_email: user.email ?? undefined,
       metadata: {
         user_id: user.id,
-        credits: String(PASS.credits),
+        pass_id: tier.id,
+        credits: String(tier.credits),
       },
       line_items: [
         {
           quantity: 1,
           price_data: {
-            currency: PASS.currency,
-            unit_amount: PASS.priceCents,
+            currency: PASS_CURRENCY,
+            unit_amount: tier.priceCents,
             product_data: {
-              name: PASS.name,
-              description: `${PASS.credits} audio narrations. They never expire.`,
+              name: `${tier.name} — Jaydi`,
+              description: `${narrationLabel(tier.credits)}. They never expire.`,
             },
           },
         },
@@ -68,7 +85,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    return Response.json({ url: session.url });
+    return Response.json({ url: session.url, passId: tier.id });
   } catch (error) {
     if (error instanceof StripeConfigurationError) {
       return Response.json({ error: error.message }, { status: 503 });
