@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import AccountControls from "@/app/auth/account-controls";
+import { LEGAL } from "@/lib/legal";
 import styles from "./page.module.css";
 
 type TrainResponse = {
@@ -407,8 +408,8 @@ export default function Home() {
             </div>
             <nav className={styles.footerLinks} aria-label="Footer">
               <a href="#about">About Jaydi</a>
-              <a href="#privacy">Privacy</a>
-              <a href="#terms">Terms</a>
+              <Link href="/privacy">Privacy</Link>
+              <Link href="/terms">Terms</Link>
               <a href="#contact">Contact</a>
             </nav>
             <div className={styles.socials} aria-label="Social links">
@@ -418,9 +419,9 @@ export default function Home() {
           </div>
           <div className={styles.footerDetails}>
             <p id="about"><b>About Jaydi</b> — Interview preparation shaped around your experience and the role you’re pursuing.</p>
-            <p id="privacy"><b>Privacy</b> — Uploading parses your document without saving the file. Generating training saves the resume text; this version has no accounts, so saved trainings are shared. Avoid entering sensitive personal information.</p>
-            <p id="terms"><b>Terms</b> — Jaydi provides preparation guidance, not a promise of interview or employment outcomes.</p>
-            <p id="contact"><b>Contact</b> — Contact details coming soon.</p>
+            <p id="privacy"><b>Privacy</b> — Your trainings are private to your account. Uploading a resume parses it in memory without keeping the file; generating a training saves the extracted resume text, the job description, and the generated lecture and audio to your account. Read the <Link href="/privacy">Privacy Policy</Link> for what we store, who processes it, and how to have it deleted.</p>
+            <p id="terms"><b>Terms</b> — Jaydi provides preparation guidance, not a promise of interview or employment outcomes. See our <Link href="/terms">Terms of Service</Link>.</p>
+            <p id="contact"><b>Contact</b> — <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a></p>
           </div>
           <div className={styles.footerBottom}>
             <span>© {new Date().getFullYear()} Jaydi</span>
