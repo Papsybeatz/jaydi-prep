@@ -3,7 +3,8 @@
  *
  * TODO before public launch — replace these placeholder values:
  *   - contactEmail: a real, monitored inbox
- *   - governingLaw: the state/country whose law governs your terms
+ *
+ * governingLaw is set to Virginia.
  */
 
 export const LEGAL = {
@@ -15,8 +16,7 @@ export const LEGAL = {
   // PLACEHOLDER — replace with a real, monitored support address.
   contactEmail: "support@example.com",
 
-  // PLACEHOLDER — replace with your governing jurisdiction.
-  governingLaw: "the State of Delaware, United States",
+  governingLaw: "the Commonwealth of Virginia, United States",
 
   providers: [
     {

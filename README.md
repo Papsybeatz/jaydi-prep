@@ -60,15 +60,22 @@ described above.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
-| `OPENAI_API_KEY` | Required for lecture generation |
-| `OPENAI_CHAT_MODEL` | Optional chat model override (default `gpt-4o-mini`) |
-| `TTS_API_KEY` | Required for audio generation |
+| `GROQ_API_KEY` | Lecture generation via Groq (free tier: 8K TPM / 200K TPD) |
+| `OPENAI_API_KEY` | Lecture generation via OpenAI, and the default speech key |
+| `LLM_PROVIDER` | Optional: `groq` or `openai`. Auto-detected when unset |
+| `LLM_MODEL` | Optional chat model override (defaults per provider) |
+| `TTS_API_KEY` | Required for stored audio narration |
 | `TTS_MODEL` | Optional speech model override (default `tts-1`) |
 | `TTS_VOICE` | Optional speech voice override (default `alloy`) |
 
+Lecture text needs **one** of `GROQ_API_KEY` or `OPENAI_API_KEY`; when both
+are present OpenAI is preferred because it also unlocks speech. Groq is
+fast and cheap but has **no speech endpoint**, so it cannot produce audio.
+
 Without Supabase configuration, sign-in shows a setup error, protected data
 pages show a configuration message, and API requests return a configuration
-error. When `OPENAI_API_KEY` is missing, training creation returns a clear
+error. When no lecture key is present, training creation returns a clear
 configuration error instead of saving placeholder text. When `TTS_API_KEY` is
-missing or speech fails, the training is saved with its lecture and the audio
-section reports that audio is unavailable.
+missing or speech fails, the training is saved with its lecture, and the
+training page offers to read the lecture aloud using the device's own voice
+so listening still works at zero cost.
