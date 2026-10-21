@@ -10,120 +10,165 @@ does exist on a personal account. Do not build on it:
 
 > "Starting January 2027, Gmail will no longer support the 'Send as' feature
 > for third-party email addresses, such as @yahoo.com or @outlook.com."
-> — Google Workspace / Gmail Help
+> — Gmail Help
 
-Anything set up that way stops working within months. Also, mail sent that way
-is frequently flagged as `you@gmail.com on behalf of you@jaydi.fit`.
+Anything set up that way stops working within months. Mail sent that way is
+also frequently flagged as `you@gmail.com on behalf of you@jaydi.fit`.
 
 ## Two jobs, two services
 
-| Job | What it is | Recommendation |
+| Job | What it needs | Notes |
 | --- | --- | --- |
-| Reading and replying to customers | A real mailbox on the domain | Google Workspace, Fastmail, or Migadu |
-| Sending auth email from Supabase | Transactional SMTP | **Resend** (free tier covers launch) |
+| Reading and replying to customers | A real mailbox on the domain | Every SMTP relay below is **send-only**: no inbox |
+| Sending auth email from Supabase | Transactional SMTP | Brevo or Resend |
 
-Trying to do both with one service is possible but awkward: a mailbox provider's
-SMTP is not built for application mail, and a transactional provider is not a
-place to read replies.
+**No transactional provider gives you an inbox.** Brevo, Resend, SendGrid and
+Postmark all send only. Receiving requires a mailbox from a mail host.
 
 ### Order matters
 
 1. Set up the mailbox first (it changes the domain's MX records).
-2. Then add Resend and its DNS records.
-3. Then point Supabase at Resend.
+2. Then authenticate the sending domain with Brevo or Resend.
+3. Then point Supabase at that SMTP relay.
 
 ---
 
 ## Step 1 — A real mailbox at info@jaydi.fit
 
-Pick one. Costs are indicative; check current pricing.
-
 | Provider | Rough cost | Notes |
 | --- | --- | --- |
-| **Google Workspace Business Starter** | ~$7/user/month | Same Gmail interface you already use. `info@jaydi.fit` becomes a real account, so replies come from it with no alias trickery. Not affected by the 2027 deprecation. |
-| **Fastmail** | ~$5/month | Cheaper, excellent deliverability, custom domain included |
-| **Migadu** | ~$19/year | Cheapest with real SMTP/IMAP. Plain interface. |
+| **Google Workspace Business Starter** | ~$7/user/month | Same Gmail interface. `info@jaydi.fit` becomes a real account, so replies come from it with no alias trickery. Unaffected by the 2027 deprecation. Replaces your current forwarding. |
+| **Fastmail** | ~$5/month | Cheaper, strong deliverability, custom domain included |
+| **Zoho Mail Lite** | ~$1/user/month | Cheapest mainstream option with IMAP/SMTP |
+| **Migadu** | ~$19/year | Very cheap, real IMAP/SMTP, plain interface |
 
-Avoid free tiers that have dropped IMAP/SMTP access — you will need SMTP later
-if you ever send from a desktop client.
+Avoid free tiers that have dropped IMAP/SMTP access.
 
-Once the mailbox exists, forwarding `info@jaydi.fit → jaydi0026@gmail.com` is
-no longer needed, because the new mailbox *is* the inbox. You can keep the
-forward as a safety net during the transition.
+Once the mailbox exists, forwarding `info@jaydi.fit → jaydi0026@gmail.com` is no
+longer needed, because the new mailbox *is* the inbox. Keep the forward as a
+safety net until you have received a test message.
 
-### DNS for Google Workspace
+### DNS for a mailbox
 
-Google gives you the exact values. Typically:
+Every provider gives you exact values. Typically:
 
 | Type | Name | Value | Priority |
 | --- | --- | --- | --- |
-| MX | `@` | `smtp.google.com` | 1 |
+| MX | `@` | `smtp.google.com` (Workspace) or your host's MX | 1 |
 | TXT | `@` | `v=spf1 include:_spf.google.com ~all` | — |
-| TXT | `google._domainkey` | (DKIM key from the Admin console) | — |
-
-Start DKIM in the Admin console: **Apps → Google Workspace → Gmail → Authenticate
-email**, generate the key, publish it, then turn on "Authenticate email".
+| TXT | `google._domainkey` | DKIM key from the admin console | — |
 
 ---
 
-## Step 2 — Resend for Supabase auth email
+## Step 2 — Choose the sending relay
 
-1. Create an account at resend.com.
-2. **Domains → Add Domain → `jaydi.fit`**.
-3. Choose the region closest to your users.
-4. Resend shows the exact DNS records. **Always copy them from the dashboard** —
-   the values below are the common shapes, not a substitute.
+| | **Brevo** | **Resend** |
+| --- | --- | --- |
+| Already have an account | ✅ (used for TGM) | No |
+| Free allowance | **300 / day** (resets daily, no rollover) | ~3,000 / month, ~100 / day |
+| Host | `smtp-relay.brevo.com` | `smtp.resend.com` |
+| Ports | 587 (STARTTLS), 465 (SSL), 2525 | 587 (STARTTLS), 465 (SSL) |
+| Username | The SMTP login shown on Brevo's SMTP page | literally `resend` |
+| Password | **SMTP key** (not the API key) | API key (`re_...`) |
+| Domain auth records | Brevo code TXT + DKIM + DMARC | DKIM + SPF/return-path + DMARC |
+| Mailbox included | ❌ send-only | ❌ send-only |
 
-### The records Resend asks for (classic setup)
+Both work with Supabase. Brevo's daily ceiling is *higher* than Resend's free
+daily ceiling, so for auth email either is sufficient at launch.
 
-| Type | Name | Value | Notes |
+### Do not share one account across two products
+
+The same reasoning you applied to the AI key applies here. Sharing one Brevo
+account between TGM and Jaydi shares:
+
+- the 300/day quota (a TGM burst starves Jaydi sign-ups),
+- the account's sending reputation and suspension risk,
+- the blast radius if a credential leaks.
+
+**Recommended:** create a **second free Brevo account** for Jaydi. It costs
+nothing and fully isolates the two.
+
+If you would rather keep one account, then at minimum:
+
+1. Add `jaydi.fit` as a separate domain under **Senders, Domains, IPs → Domains**.
+2. Create a **dedicated SMTP key** for Jaydi under **SMTP & API → SMTP**
+   (never reuse TGM's key).
+3. Accept the shared quota and shared suspension risk.
+
+Brevo supports multiple sending domains on one account, each configured
+independently.
+
+---
+
+## Step 3 — Authenticate the domain with Brevo
+
+1. Brevo → **Settings → Senders, Domains, IPs → Domains → Add a domain**.
+2. Enter `jaydi.fit`, choose **Authenticate the domain yourself**.
+3. Brevo shows the exact DNS records — **copy them, do not retype**.
+
+Typical set:
+
+| Type | Name | Value | Purpose |
 | --- | --- | --- | --- |
-| TXT | `resend._domainkey` | `p=MIGfMA0GCSq...` | Copy exactly from the dashboard |
-| MX | `send` | `feedback-smtp.<region>.amazonses.com` | Priority 10, return-path |
-| TXT | `send` | `v=spf1 include:amazonses.com ~all` | Subdomain SPF, not the apex |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:info@jaydi.fit` | Start permissive |
+| TXT | `@` | `brevo-code:xxxxxxxx` | Proves you own the domain |
+| TXT | `mail._domainkey` | `v=DKIM1; k=rsa; p=MIGf...` | DKIM signing (or 2 CNAMEs for a 2048-bit key) |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:info@jaydi.fit` | DMARC reporting |
 
-Newer Resend accounts get **three randomised DKIM CNAMEs** instead of the single
-TXT. Publish whatever the dashboard shows.
+Notes:
 
-### Notes that cause most failures
+- **SPF and MX are not required** by Brevo for domain authentication. Brevo only
+  asks for those when you move to a dedicated IP, because on shared
+  infrastructure it handles return-path itself.
+- **One SPF record, maximum.** If the mailbox provider already published one at
+  `@`, merge the `include:` values rather than adding a second record.
+- **One DMARC record, maximum.** Update the existing one instead of adding a
+  second.
+- **Cloudflare: set these to DNS only (grey cloud).** A proxied mail record will
+  not verify.
+- If the domain is not authenticated, Brevo **replaces your sender address** with
+  a compliant one — mail still sends, but it will not look like you.
 
-- **Never have two SPF TXT records at the same name.** Only one `v=spf1` record
-  is allowed. If a provider already put one at `@`, merge the `include:` values
-  into a single record.
-- **The `send` subdomain is deliberate.** Resend puts its return-path MX and SPF
-  on `send.jaydi.fit`, which leaves your root MX free for the mailbox. That is
-  why step 1 and step 2 do not conflict.
-- **Cloudflare: set these records to DNS only (grey cloud).** A proxied mail
-  record will not verify.
-- Wait a few minutes, then click **Verify** in Resend. DKIM must pass.
+Then generate the SMTP credentials: **Settings → SMTP & API → SMTP → Create a new
+SMTP key**. Copy the login shown on that page; depending on account age it is
+either your login email or an address like `[ID]@smtp-brevo.com`.
 
 ---
 
-## Step 3 — Point Supabase at Resend
+## Step 4 — Point Supabase at the relay
 
-Supabase dashboard → **Authentication → Emails → SMTP Settings** (the path has
-moved between dashboard versions; it is under Authentication, not Project
-Settings).
+Supabase dashboard → **Authentication → Emails → SMTP Settings** (under
+Authentication, not Project Settings). Toggle **Enable Custom SMTP**.
 
-Toggle **Enable Custom SMTP** and fill in:
+**Brevo:**
 
 | Field | Value |
 | --- | --- |
-| Host | `smtp.resend.com` |
+| Host | `smtp-relay.brevo.com` |
 | Port | `587` (STARTTLS) or `465` (SSL) |
-| Username | `resend` — literally the word `resend` |
-| Password | Your Resend API key (`re_...`) |
+| Username | The SMTP login from Brevo's SMTP page |
+| Password | The **SMTP key**, not the API key |
 | Sender email | `info@jaydi.fit` |
 | Sender name | `Jaydi` |
 | Minimum interval per email | `60` seconds |
 
-The sender address **must** be on the domain you verified with Resend, or
-messages will be rejected. Save.
+**Resend:**
+
+| Field | Value |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `587` or `465` |
+| Username | `resend` — literally that word |
+| Password | API key (`re_...`) |
+| Sender email | `info@jaydi.fit` |
+| Sender name | `Jaydi` |
+| Minimum interval per email | `60` seconds |
+
+The sender address **must** be on the authenticated domain, or messages are
+rejected or rewritten.
 
 ---
 
-## Step 4 — Supabase auth settings
+## Step 5 — Supabase auth settings
 
 **Authentication → URL Configuration**
 
@@ -135,29 +180,22 @@ messages will be rejected. Save.
 **Authentication → Rate Limits**
 
 Raise the email rate limit above the default. The built-in Supabase mailer caps
-at a couple of messages per hour; that cap exists to protect their shared
-infrastructure and is why confirmation emails appear to vanish. With Resend
-wired up, set this to match your Resend plan (Resend's free tier allows about
-100 messages per day, 3,000 per month).
+at a couple of messages per hour; that cap is why confirmation emails appear to
+vanish. With a real relay configured, set it to match the provider
+(Brevo free: 300/day; Resend free: ~100/day).
 
 **Authentication → Emails (Templates)**
 
-Optionally restyle the confirmation, recovery, magic link, invite and
-email_change templates so they say Jaydi rather than Supabase.
-
-**Authentication → Sign In / Providers**
-
-Decide whether Email confirmation is required. With working SMTP, leaving it on
-is the safer default.
+Optionally restyle confirmation, recovery, magic link, invite and email_change
+so they say Jaydi rather than Supabase.
 
 ---
 
-## Step 5 — Verify it actually works
+## Step 6 — Verify it actually works
 
 1. Sign up at `https://www.jaydi.fit/auth` with a real address you can open.
-2. Open the confirmation email and check the sender reads `Jaydi <info@jaydi.fit>`.
-3. In the received message choose **Show original** (Gmail: ⋮ → Show original)
-   and confirm:
+2. The sender should read `Jaydi <info@jaydi.fit>`.
+3. Gmail → ⋮ → **Show original** and confirm:
 
 ```
 SPF:   pass
@@ -165,9 +203,8 @@ DKIM:  pass
 DMARC: pass
 ```
 
-4. Send a reply to the confirmation and confirm it lands in the mailbox.
-5. Reply from the mailbox and confirm the customer sees `info@jaydi.fit`, not a
-   Gmail address.
+4. Reply to that email and confirm it reaches the mailbox.
+5. Reply from the mailbox and confirm the customer sees `info@jaydi.fit`.
 
 ---
 
@@ -175,9 +212,11 @@ DMARC: pass
 
 | Symptom | Cause |
 | --- | --- |
-| Confirmation never arrives | Custom SMTP not saved, or sender address is not on the verified domain |
+| `535` auth failure | Using the API key instead of the SMTP key, or `smtp-relay.brevo.com` typed into the username field |
+| Confirmation never arrives | Custom SMTP not saved, or sender address is not on the authenticated domain |
+| Sender is not what you set | Domain not authenticated, so Brevo substituted a compliant address |
 | Lands in spam | DKIM not verified, or no DMARC record |
-| `dmarc=fail` but `dkim=pass` | The From domain does not align with the signing domain — check the sender address |
-| Resend domain stuck on Pending | A record is proxied in Cloudflare, or SPF exists twice at the same name |
-| Works for you, not for others | Supabase still on the built-in mailer, which only delivers to project team addresses |
-| Auth emails stop after a few | Supabase rate limit or Resend's daily cap |
+| `dmarc=fail` but `dkim=pass` | Sender domain does not align with the authenticated domain |
+| Domain stuck on Pending | Record proxied in Cloudflare, or two SPF/DMARC records at the same name |
+| Works for you, not for others | Still on the built-in Supabase mailer, which only delivers to project team addresses |
+| Stops after a burst | Daily cap reached (Brevo 300/day, Resend ~100/day) |
