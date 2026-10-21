@@ -1,20 +1,17 @@
 /**
  * Single source of truth for the legal pages and the site footer.
- *
- * TODO before public launch — replace these placeholder values:
- *   - contactEmail: a real, monitored inbox
- *
- * governingLaw is set to Virginia.
  */
 
 export const LEGAL = {
   company: "Gee Oh Dee (Tech) LLC",
   product: "Jaydi",
+  website: "https://www.jaydi.fit",
   effectiveDate: "October 20, 2026",
   minimumAge: 16,
 
-  // PLACEHOLDER — replace with a real, monitored support address.
-  contactEmail: "support@example.com",
+  // Receives mail via forwarding. Replies come from the inbox it forwards to
+  // unless a "send as" identity is configured.
+  contactEmail: "info@jaydi.fit",
 
   governingLaw: "the Commonwealth of Virginia, United States",
 
@@ -37,3 +34,9 @@ export const LEGAL = {
     },
   ],
 } as const;
+
+/** Absolute origin used for canonical URLs and checkout return links. */
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || LEGAL.website).replace(
+  /\/+$/,
+  "",
+);

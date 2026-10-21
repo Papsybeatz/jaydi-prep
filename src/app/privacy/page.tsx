@@ -28,9 +28,9 @@ export default function PrivacyPage() {
       <section className={styles.section}>
         <h2>1. Who we are</h2>
         <p>
-          {LEGAL.product} is operated by {LEGAL.company}. We are the controller
-          of the personal information described in this policy. You can reach us
-          at{" "}
+          {LEGAL.product} is operated by {LEGAL.company}. This policy applies to
+          the service at {LEGAL.website}. We are the controller of the personal
+          information described in this policy. You can reach us at{" "}
           <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.
         </p>
       </section>
