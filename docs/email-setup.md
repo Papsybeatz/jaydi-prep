@@ -35,12 +35,16 @@ Postmark all send only. Receiving requires a mailbox from a mail host.
 
 ## Step 1 — A real mailbox at info@jaydi.fit
 
-| Provider | Rough cost | Notes |
-| --- | --- | --- |
-| **Google Workspace Business Starter** | ~$7/user/month | Same Gmail interface. `info@jaydi.fit` becomes a real account, so replies come from it with no alias trickery. Unaffected by the 2027 deprecation. Replaces your current forwarding. |
-| **Fastmail** | ~$5/month | Cheaper, strong deliverability, custom domain included |
-| **Zoho Mail Lite** | ~$1/user/month | Cheapest mainstream option with IMAP/SMTP |
-| **Migadu** | ~$19/year | Very cheap, real IMAP/SMTP, plain interface |
+| Provider | Rough cost | Outbound/day | Notes |
+| --- | --- | --- | --- |
+| **Google Workspace Business Starter** | ~$7/user/month | **2,000** via `smtp.gmail.com`, 10,000 via the relay | Same Gmail interface. `info@jaydi.fit` becomes a real account, so replies come from it. Unaffected by the 2027 deprecation. Replaces your forwarding. |
+| **Fastmail** | ~$5–8/month | **4,000** (Basic) | Strong deliverability, custom domain, plain IMAP/SMTP. Says explicitly it is not a bulk sender, which is fine at auth-email volumes. |
+| **Zoho Mail Lite** | ~$1/user/month | ~250 | Cheapest mainstream option with IMAP/SMTP |
+| **Migadu Micro** | ~$19/year | **20** | ⚠️ 20 outbound/day is far too low for auth email. Mini ($90/yr) gives 100/day, Standard ($290/yr) 500/day. Unlimited mailboxes, per-domain pricing. |
+
+> **Correction to earlier advice:** I suggested Migadu at $19/year. Its Micro plan
+> allows only **20 outbound messages per day**, which auth email would exhaust on
+> the first busy morning. If you want Migadu here, budget for Mini or Standard.
 
 Avoid free tiers that have dropped IMAP/SMTP access.
 
@@ -75,6 +79,28 @@ Every provider gives you exact values. Typically:
 
 Both work with Supabase. Brevo's daily ceiling is *higher* than Resend's free
 daily ceiling, so for auth email either is sufficient at launch.
+
+### Can one vendor do both?
+
+Yes — every mailbox provider above also exposes SMTP. You can skip the
+separate relay entirely:
+
+| Mailbox | SMTP host | Auth | Daily cap |
+| --- | --- | --- | --- |
+| Google Workspace | `smtp.gmail.com:587` | App password (needs 2-Step Verification) | 2,000 messages |
+| Google Workspace (relay) | `smtp-relay.gmail.com:587` | SMTP AUTH or IP allowlist | 10,000 recipients |
+| Fastmail | `smtp.fastmail.com:465` | App password | 4,000 messages |
+
+What you gain: one vendor, one DNS set, one bill, nothing to reconcile.
+
+What you give up: **reputation isolation.** Auth email and your human inbox
+share the same domain reputation. If a burst of confirmation emails gets marked
+as spam, your business mail suffers with it. That is the reason most products
+keep a transactional relay separate.
+
+Recommendation: a mailbox plus Brevo costs the same as the mailbox alone
+(Brevo is free), so there is little reason to merge them. Use one vendor only
+if you want to minimise moving parts.
 
 ### Do not share one account across two products
 
